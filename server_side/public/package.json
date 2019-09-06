@@ -1,0 +1,41 @@
+{
+  "name": "prooven",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@types/jquery": "^3.3.29",
+    "axios": "^0.18.0",
+    "filepond": "^4.4.12",
+    "filepond-plugin-file-validate-size": "^2.2.0",
+    "filepond-plugin-file-validate-type": "^1.2.4",
+    "filepond-plugin-image-exif-orientation": "^1.0.6",
+    "filepond-plugin-image-preview": "^4.2.1",
+    "jquery": "^3.4.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-excel-renderer": "^1.1.0",
+    "react-filepond": "^7.0.1",
+    "react-modal": "^3.10.1",
+    "react-redux": "^7.0.3",
+    "react-router": "^5.0.1",
+    "react-router-dom": "^5.0.0",
+    "react-scripts-ts": "3.1.0",
+    "redux": "^4.0.1",
+    "redux-persist": "^5.10.0",
+    "ree-validate": "^3.0.2",
+    "xlsx": "^0.15.0"
+  },
+  "scripts": {
+    "start": "react-scripts-ts start",
+    "build": "react-scripts-ts build",
+    "test": "react-scripts-ts test --env=jsdom",
+    "eject": "react-scripts-ts eject"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.13",
+    "@types/node": "^12.0.1",
+    "@types/react": "^16.8.17",
+    "@types/react-dom": "^16.8.4",
+    "typescript": "^3.4.5"
+  }
+}
