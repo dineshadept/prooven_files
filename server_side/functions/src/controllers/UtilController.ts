@@ -4,20 +4,28 @@ const app = ExpressConfig.getInstance();
 import {firebase} from "../config/firebaseConfig";
 const candidatesDBRef = firebase.database().ref('candidates');
 
+const getCountryData = () => {
+    let countryJson: any = [];
+    const countriesData: any = require('country-data').countries.all
+    countriesData.forEach((data: any) => {
+        countryJson.push({
+            code: data.alpha2,
+            dial_code: data.countryCallingCodes[0],
+            name: data.name,
+            emoji: data.emoji
+        })
+    })
+    countryJson = countryJson.sort((a: any, b: any) => a.name.localeCompare(b.name));
+    return countryJson;
+}
+const countriesData = getCountryData();
+
 export const utilDefs = function(): void {
 
 
     app.get('/country', (req: any, res: any) => {
         res.header("Access-Control-Allow-Origin", "*");
-
-        const countryRef = firebase.database().ref("country");
-
-        countryRef.once('value').then(async function (snapshot: any) {
-            let countryList = snapshot.val();
-            countryList = countryList.sort((a: any, b: any) => a.name.localeCompare(b.name));
-            return res.json(countryList);
-        });
-
+        return res.json(countriesData);
     });
 
 
