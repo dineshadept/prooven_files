@@ -2,17 +2,26 @@ import {bucket, firebase} from "../config/firebaseConfig";
 import {ExpressConfig} from '../config/express';
 const app = ExpressConfig.getInstance();
 
-const crypto = require('crypto');
-const Wallet = require('ethereumjs-wallet');
-const bip39 = require('bip39');
+import {Candidate, createCandidate} from "../interfaces/Candidate";
 
 const XLSX = require('xlsx');
 const PDFDocument = require('pdfkit');
 
 const candidatesDBRef = firebase.database().ref('candidates');
 
-
 export const transcriptsDefs = function () {
+    app.post('/insert_candidate', (req:any, res:any) => {
+        const userId = req.body.userid;
+
+        const newCandidateRef = candidatesDBRef.push();
+        const candidate = createCandidate(userId, req.body);
+        createCandidatePDF(candidate, (downloadLink: any) => {
+            newCandidateRef.set(candidate).then(() => {
+                return res.send(`Inserted candidate for userId, ${userId}`);
+            });
+        });
+    });
+
     app.post('/read_upload',  (req:any, res:any) => {
 
         const file =req.files[0];
@@ -31,8 +40,7 @@ export const transcriptsDefs = function () {
             blobStream.on('finish', () => {
                 const userId = req.body.userid;
                 processUploadedTypescript(file, userId, () => {
-                    console.log("Final Callback called...")
-                    res.send(newFileName);
+                    res.send(`Completed processing for userId, ${userId}`);
                 });
             });
 
@@ -49,33 +57,9 @@ export const transcriptsDefs = function () {
 
         const requests = contents.map((candidateRow: any) => {
             return new Promise((resolve) => {
-                const fname = candidateRow.Name;
-                const phone = candidateRow.Phone;
-                const email = candidateRow.Email;
-                const password = candidateRow.Password;
-                const currentDate = new Date();
-                const  randomBytes = crypto.randomBytes(16);
-                const mnemonic = bip39.entropyToMnemonic(randomBytes.toString('hex')) ;
-                const wallet = Wallet.generate();
-                const privateKey = wallet.getPrivateKeyString();
-                const publicKey = wallet.getAddressString();
-                const userid = userId;
+                console.log("Processed candidates uploaded for userId", userId);
                 const newCandidateRef = candidatesDBRef.push();
-
-                const candidate = {
-                    userid : userid,
-                    fname: fname,
-                    phone: phone,
-                    email: email,
-                    password: password,
-                    privateKey : privateKey,
-                    publicKey : publicKey,
-                    phrase : mnemonic,
-                    created_on : currentDate,
-                    link : ""
-                }
-
-                console.log("Processed candidate ", fname, "for userid", userid);
+                const candidate: Candidate = createCandidate(userId, candidateRow);
                 createCandidatePDF(candidate, (downloadLink: any) => {
                     newCandidateRef.set(candidate).then(() => {
                         resolve()
@@ -92,10 +76,8 @@ export const transcriptsDefs = function () {
     }
 
     const createCandidatePDF =  function(candidate: any, createPdfCb: any): void {
-        const file = new PDFDocument();
-        const pdfName = candidate.userid + "_" + candidate.fname + "_" + candidate.created_on.getTime();
-        const blob = bucket.file(pdfName);
-        candidate.link = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+        const pdfFile = new PDFDocument();
+        const blob = bucket.file(candidate.fileName);
         const blobStream = blob.createWriteStream({
             metadata: {
                 contentType: 'application/pdf'
@@ -107,16 +89,16 @@ export const transcriptsDefs = function () {
             const rowStr = `${key} --> ${candidate[key]}`;
             pdfContent += "\n" + rowStr;
         });
-        file.pipe(blobStream);
-        file.fillColor("blue")
+        pdfFile.pipe(blobStream);
+        pdfFile.fillColor("blue")
             .text(pdfContent, 100, 100);
-        file.end();
+        pdfFile.end();
         blobStream.on("error", (err: any) => {
-            console.log("Error creating pdf file " + pdfName, err)
+            console.log("Error creating pdf file " + candidate.fileName, err)
             createPdfCb("");
         });
         blobStream.on("finish", () => {
-            console.log("Uploaded pdf file", pdfName)
+            console.log("Uploaded pdf file", candidate.fileName)
             // Make the image public to the web
             blob.makePublic().then(() => {
                 createPdfCb(candidate);
