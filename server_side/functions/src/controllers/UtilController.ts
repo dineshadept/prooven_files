@@ -6,8 +6,8 @@ const candidatesDBRef = firebase.database().ref('candidates');
 
 const getCountryData = () => {
     let countryJson: any = [];
-    const countriesData: any = require('country-data').countries.all
-    countriesData.forEach((data: any) => {
+    const allCountriesData: any = require('country-data').countries.all
+    allCountriesData.forEach((data: any) => {
         countryJson.push({
             code: data.alpha2,
             dial_code: data.countryCallingCodes[0],

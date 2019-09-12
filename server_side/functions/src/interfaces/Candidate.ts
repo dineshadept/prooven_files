@@ -38,7 +38,7 @@ export const createCandidate = function(userId: String, inputObject: any): Candi
     const fileName = `${userId}_${name}_${serverTs}`;
     const link = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
-    let candidate: Candidate = {
+    const candidate: Candidate = {
         userId: userId,
         privateKey: privateKey,
         publicKey: publicKey,
