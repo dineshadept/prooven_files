@@ -1,6 +1,7 @@
 import {ExpressConfig} from '../config/express';
 const app = ExpressConfig.getInstance();
 import {firebase} from "../config/firebaseConfig";
+import {errMsgs, errorCode} from "../config/Constants";
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const Wallet = require('ethereumjs-wallet');
@@ -98,9 +99,8 @@ export const authDefs = function() {
 
             });
         }).catch(function (error: any) {
-            const errorCode = error.code;
-            // return res.json({ "message": errorCode});
-            res.status(errorCode).send("Login Failed: Please check your Email or password");
+            console.log("Login error", error);
+            res.status(errorCode).send(errMsgs.login_failure_invalid_credentials);
         });
 
 
