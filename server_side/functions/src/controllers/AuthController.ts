@@ -100,7 +100,7 @@ export const authDefs = function() {
         }).catch(function (error: any) {
             const errorCode = error.code;
             // return res.json({ "message": errorCode});
-            res.sendStatus(errorCode);
+            res.status(errorCode).send("Login Failed: Please check your Email or password");
         });
 
 
