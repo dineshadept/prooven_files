@@ -158,11 +158,6 @@ export const authDefs = function() {
 
     });
 
-    app.post('/send_email', (req: any, res: any) => {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.send("mailsent");
-    });
-
     app.post('/reset_password', (req: any, res: any) => {
         res.header("Access-Control-Allow-Origin", "*");
 

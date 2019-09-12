@@ -3,9 +3,10 @@ import {ExpressConfig} from '../config/express';
 const app = ExpressConfig.getInstance();
 
 import {Candidate, createCandidate} from "../interfaces/Candidate";
+import {certificateHtml} from '../config/certificate.html';
 
 const XLSX = require('xlsx');
-const PDFDocument = require('pdfkit');
+const pdf = require('html-pdf');
 
 const candidatesDBRef = firebase.database().ref('candidates');
 
@@ -75,34 +76,36 @@ export const transcriptsDefs = function () {
             .catch(err => console.log("Error while processing uploaded excel", err));
     }
 
-    const createCandidatePDF =  function(candidate: any, createPdfCb: any): void {
-        const pdfFile = new PDFDocument();
-        const blob = bucket.file(candidate.fileName);
-        const blobStream = blob.createWriteStream({
-            metadata: {
-                contentType: 'application/pdf'
-            }
-        });
+    const createCandidatePDF =  function(candidate: Candidate, createPdfCb: any): void {
+        const options = {
+            format: 'A3',
+            orientation: "landscape"
+        };
+        let certificateContent: String = certificateHtml;
+        Object.entries(candidate).forEach(([key, value]) => {
+            certificateContent = certificateContent.replace(`{{${key}}}`, value.toString());
 
-        let pdfContent: String = "";
-        Object.keys(candidate).forEach(key => {
-            const rowStr = `${key} --> ${candidate[key]}`;
-            pdfContent += "\n" + rowStr;
-        });
-        pdfFile.pipe(blobStream);
-        pdfFile.fillColor("blue")
-            .text(pdfContent, 100, 100);
-        pdfFile.end();
-        blobStream.on("error", (err: any) => {
-            console.log("Error creating pdf file " + candidate.fileName, err)
-            createPdfCb("");
-        });
-        blobStream.on("finish", () => {
-            console.log("Uploaded pdf file", candidate.fileName)
-            // Make the image public to the web
-            blob.makePublic().then(() => {
-                createPdfCb(candidate);
+        })
+        pdf.create(certificateContent, options).toStream(function(err: any, stream: any){
+            const blob = bucket.file(candidate.fileName);
+            const blobStream = blob.createWriteStream({
+                metadata: {
+                    contentType: 'application/pdf'
+                }
             });
+            blobStream.on("error", (err: any) => {
+                console.log("Error creating pdf file " + candidate.fileName, err)
+                createPdfCb("");
+            });
+            blobStream.on("finish", () => {
+                console.log("Uploaded pdf file", candidate.fileName)
+                // Make the image public to the web
+                blob.makePublic().then(() => {
+                    createPdfCb(candidate);
+                });
+            });
+
+            stream.pipe(blobStream);
         });
     }
 }
