@@ -4,6 +4,7 @@ const app = ExpressConfig.getInstance();
 
 import {Candidate, createCandidate} from "../interfaces/Candidate";
 import {certificateHtml} from '../config/certificate.html';
+import {UserUtil} from "../util/userUtil";
 
 const XLSX = require('xlsx');
 const pdf = require('html-pdf');
@@ -13,6 +14,9 @@ const candidatesDBRef = firebase.database().ref('candidates');
 export const transcriptsDefs = function () {
     app.post('/insert_candidate', (req:any, res:any) => {
         const userId = req.body.userid;
+
+        // Send response if userId is invalid
+        UserUtil.isUserExistsHttpRes(userId, res);
 
         const newCandidateRef = candidatesDBRef.push();
         const candidate = createCandidate(userId, req.body);
@@ -24,6 +28,10 @@ export const transcriptsDefs = function () {
     });
 
     app.post('/read_upload',  (req:any, res:any) => {
+        const userId = req.body.userid;
+
+        // Send response if userId is invalid
+        UserUtil.isUserExistsHttpRes(userId, res);
 
         const file =req.files[0];
 
@@ -39,7 +47,6 @@ export const transcriptsDefs = function () {
             });
 
             blobStream.on('finish', () => {
-                const userId = req.body.userid;
                 processUploadedTypescript(file, userId, () => {
                     res.send(`Completed processing for userId, ${userId}`);
                 });

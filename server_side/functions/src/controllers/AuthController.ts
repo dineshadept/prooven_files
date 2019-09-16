@@ -90,9 +90,7 @@ export const authDefs = function() {
 
         firebase.auth().signInWithEmailAndPassword(email, password).then((returnedUser: any) => {
 
-            const userRef = firebase.database().ref("users");
-
-            userRef.orderByChild("email").equalTo(email).on("child_added", async function (snapshot: any) {
+            usersDBRef.orderByChild("email").equalTo(email).on("child_added", async function (snapshot: any) {
                 const userInfo = snapshot.val();
                 return res.json(userInfo);
 
