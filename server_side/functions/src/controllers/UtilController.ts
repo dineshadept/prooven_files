@@ -31,9 +31,9 @@ export const utilDefs = function(): void {
 
     app.post('/list_candidates', (req: any, res: any) => {
         res.header("Access-Control-Allow-Origin", "*");
-        const userid = req.body.userid;
+        const userId = req.body.userid;
 
-        candidatesDBRef.orderByChild("userid").equalTo(userid).on('value', async function (snapshot: any) {
+        candidatesDBRef.orderByChild("userId").equalTo(userId).on('value', async function (snapshot: any) {
             const candidatesList = snapshot.val();
             return res.json(candidatesList);
         });
