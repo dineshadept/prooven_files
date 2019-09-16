@@ -1,7 +1,7 @@
 import {ExpressConfig} from '../config/express';
 const app = ExpressConfig.getInstance();
 import {firebase} from "../config/firebaseConfig";
-import {errMsgs, errorCode} from "../config/Constants";
+import {errMsgs} from "../config/Constants";
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const Wallet = require('ethereumjs-wallet');
@@ -72,12 +72,11 @@ export const authDefs = function() {
             });
         }).catch(function (error: any) {
             // Handle Errors here.
-            const errorCode = error.code;
-            console.log(errorCode);
+            console.log(error.code);
             const errorMessage = error.message;
             console.log(errorMessage);
 
-            res.status(errorCode).json({"message": errorMessage});
+            res.status(error.code).json({"message": errorMessage});
         });
 
 
@@ -100,7 +99,8 @@ export const authDefs = function() {
             });
         }).catch(function (error: any) {
             console.log("Login error", error);
-            res.status(errorCode).send(errMsgs.login_failure_invalid_credentials);
+            const errorJson = errMsgs.login_failure_invalid_credentials;
+            res.status(errorJson.code).send(errorJson.message);
         });
 
 

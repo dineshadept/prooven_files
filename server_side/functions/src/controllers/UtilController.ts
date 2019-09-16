@@ -35,7 +35,7 @@ export const utilDefs = function(): void {
 
         candidatesDBRef.orderByChild("userId").equalTo(userId).on('value', async function (snapshot: any) {
             const candidatesList = snapshot.val();
-            if (candidatesList == null)
+            if (candidatesList === null)
                 return res.json({});
             else
                 return res.json(candidatesList);

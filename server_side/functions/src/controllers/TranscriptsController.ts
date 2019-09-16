@@ -93,8 +93,8 @@ export const transcriptsDefs = function () {
                     contentType: 'application/pdf'
                 }
             });
-            blobStream.on("error", (err: any) => {
-                console.log("Error creating pdf file " + candidate.fileName, err)
+            blobStream.on("error", (blobStreamErr: any) => {
+                console.log("Error creating pdf file " + candidate.fileName, blobStreamErr)
                 createPdfCb("");
             });
             blobStream.on("finish", () => {
