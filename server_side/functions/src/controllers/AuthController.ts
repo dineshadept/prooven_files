@@ -59,14 +59,20 @@ export const authDefs = function() {
         res.header("Access-Control-Allow-Origin", "*");
         const email = req.body.email;
         const password = req.body.password;
-        //let emailcount = 0;
 
         firebase.auth().signInWithEmailAndPassword(email, password).then((returnedUser: any) => {
 
-            usersDBRef.orderByChild("email").equalTo(email).on("child_added", async function (snapshot: any) {
-                const userInfo = snapshot.val();
-                return res.json(userInfo);
-
+            usersDBRef.orderByChild("email")
+                .equalTo(email)
+                .once("value").then(async (snapshot: any) => {
+                    const userInfo = snapshot.val();
+                    const userIdKey = Object.keys(userInfo)[0];
+                    let resJson;
+                    if (userInfo[userIdKey].isEmailVerified === true)
+                        resJson = successMsgs.login_success;
+                    else
+                        resJson = errMsgs.login_failure_verification_incomplete;
+                return res.status(resJson.code).send(resJson.message);
             });
         }).catch(function (error: any) {
             console.log("Login error", error);
