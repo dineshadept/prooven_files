@@ -1,85 +1,58 @@
 import {ExpressConfig} from '../config/express';
 const app = ExpressConfig.getInstance();
 import {firebase} from "../config/firebaseConfig";
-import {errMsgs} from "../config/Constants";
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const Wallet = require('ethereumjs-wallet');
-const bip39 = require('bip39');
+import {errMsgs, successMsgs} from "../config/Constants";
+import {GenericUtil} from "../util/genericUtil";
+import {EmailUtil} from "../util/emailUtil";
+import {UserUtil} from "../util/userUtil";
+import {createUser} from "../interfaces/User";
 const User = require("sequelize");
-const saltRounds = 10;
 
 const usersDBRef = firebase.database().ref('users');
 
 export const authDefs = function() {
 
-
     app.post('/signup', function (req: any, res: any) {
         res.header("Access-Control-Allow-Origin", "*");
-
-        const provider_name = req.body.provider_name;
-        const provider_type = req.body.provider_type;
-        const country = req.body.country;
-        const name = req.body.name;
-        const phone = req.body.phone;
         const email = req.body.email;
-        const website = req.body.website;
-        const about_business = req.body.about_business;
         const password = req.body.password;
 
-        firebase.auth().createUserWithEmailAndPassword(email, password).then(function (data: any) {
-            console.log("Created user", email, "in Firebase Auth");
-            const userid = data.user.uid;
-            //Here if you want you can sign in the user
-            const randomBytes = crypto.randomBytes(16);
-            const mnemonic = bip39.entropyToMnemonic(randomBytes.toString('hex'));
-            //console.log(mnemonic);
-            const wallet = Wallet.generate();
-            const privateKey = wallet.getPrivateKeyString();
-            const publicKey = wallet.getAddressString();
+        UserUtil.isEmailExists(email, (isExists: boolean) => {
+            if (isExists) {
+                const resJson = errMsgs.signup_duplicate;
+                res.status(resJson.code).send(resJson.message);
+            } else {
+                firebase.auth().createUserWithEmailAndPassword(email, password).then(function (data: any) {
+                    console.log("Created user", email, "in Firebase Auth");
+                    const userId = data.user.uid;
 
-            bcrypt.hash(password, saltRounds, function (err: any, hash: any) {
-                const newUser = usersDBRef.push();
+                    createUser(userId, req, (user: any) => {
+                        const verifyLink = `${GenericUtil.getFullReqUrl(req)}/verify/${user.userId}/${user.emailVerificationToken}`;
+                        const newUser = usersDBRef.push();
+                        newUser.set(user).then(() => {
+                            EmailUtil.sendEmail("Welcome to Prooven",
+                                [email],
+                                [], [],
+                                `Please click the following link to verify your email - ${verifyLink}`,
+                                () => {
+                                    const resJson = successMsgs.signup_success;
+                                    console.log("Created user", email, "in Firebase Database");
+                                    res.status(resJson.code).send(resJson.message);
+                                }
+                            )
+                        });
+                    })
+                }).catch(function (error: any) {
+                    // Handle Errors here.
+                    console.log(error.code);
+                    const errorMessage = error.message;
+                    console.log(errorMessage);
 
-                newUser.set({
-                    provider_name: provider_name,
-                    provider_type: provider_type,
-                    country: country,
-                    name: name,
-                    phone: phone,
-                    email: email,
-                    userid: userid,
-                    website: website,
-                    about_business: about_business,
-                    privateKey: privateKey,
-                    publicKey: publicKey,
-                    phrase: mnemonic,
-                    password: hash
-                }).then(() => {
-                    console.log("Created user", email, "in Firebase Database");
-                    res.status(200).json({
-                        provider_name: provider_name,
-                        provider_type: provider_type,
-                        country: country,
-                        name: name,
-                        phone: phone,
-                        email: email,
-                        website: website,
-                        about_business: about_business,
-                        userid: userid
-                    });
+                    res.status(error.code).send(errorMessage);
                 });
-            });
-        }).catch(function (error: any) {
-            // Handle Errors here.
-            console.log(error.code);
-            const errorMessage = error.message;
-            console.log(errorMessage);
+            }
 
-            res.status(error.code).json({"message": errorMessage});
-        });
-
-
+        })
     });
 
     app.post('/signin', (req: any, res: any) => {
@@ -188,4 +161,30 @@ export const authDefs = function() {
 
     });
 
+    app.get('/signup/verify/:userId/:token', (req: any, res: any) => {
+        const userId: String = req.params.userId;
+        const token: String = req.params.token;
+        UserUtil.getUserId(userId, (user: any) => {
+            const userIdKey = Object.keys(user)[0];
+            let resJson: any;
+            if(user === null) {
+                resJson = errMsgs.email_verify_token_mismatch;
+            } else {
+                if(user[userIdKey].emailVerificationToken === token) {
+                    user[userIdKey].isEmailVerified = true;
+                    user[userIdKey].emailVerificationToken = "";
+                    user[userIdKey].emailVerificationTokenCreatedTs = 0;
+                    resJson = successMsgs.email_verify_success;
+                } else {
+                    resJson = errMsgs.email_verify_token_mismatch;
+                }
+            }
+
+            if(resJson.code === 200) {
+                UserUtil.updateUser(user, () => {
+                    res.status(resJson.code).send(resJson.message);
+                })
+            }
+        });
+    });
 }

@@ -5,6 +5,7 @@ const app = ExpressConfig.getInstance();
 import {Candidate, createCandidate} from "../interfaces/Candidate";
 import {certificateHtml} from '../config/certificate.html';
 import {UserUtil} from "../util/userUtil";
+import {successMsgs} from "../config/Constants";
 
 const XLSX = require('xlsx');
 const pdf = require('html-pdf');
@@ -48,7 +49,9 @@ export const transcriptsDefs = function () {
 
             blobStream.on('finish', () => {
                 processUploadedTypescript(file, userId, () => {
-                    res.send(`Completed processing for userId, ${userId}`);
+                    console.log(`Completed processing for userId, ${userId}`);
+                    const resJson = successMsgs.candidates_update_success;
+                    res.status(resJson.code).send(resJson.message);
                 });
             });
 
