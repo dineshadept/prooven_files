@@ -168,6 +168,8 @@ export const authDefs = function() {
     });
 
     app.get('/signup/verify/:userId/:token', (req: any, res: any) => {
+        res.header("Access-Control-Allow-Origin", "*");
+
         const userId: String = req.params.userId;
         const token: String = req.params.token;
         UserUtil.getUserId(userId, (user: any) => {
