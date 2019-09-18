@@ -67,12 +67,13 @@ export const authDefs = function() {
                 .once("value").then(async (snapshot: any) => {
                     const userInfo = snapshot.val();
                     const userIdKey = Object.keys(userInfo)[0];
-                    let resJson;
-                    if (userInfo[userIdKey].isEmailVerified === true)
-                        resJson = successMsgs.login_success;
-                    else
-                        resJson = errMsgs.login_failure_verification_incomplete;
-                return res.status(resJson.code).send(resJson.message);
+                    if (userInfo[userIdKey].isEmailVerified === true) {
+                        return res.json(userInfo[userIdKey]);
+                    }
+                    else {
+                        const resJson = errMsgs.login_failure_verification_incomplete;
+                        return res.status(resJson.code).send(resJson.message);
+                    }
             });
         }).catch(function (error: any) {
             console.log("Login error", error);
