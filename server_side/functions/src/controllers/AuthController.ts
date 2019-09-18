@@ -27,7 +27,7 @@ export const authDefs = function() {
                     const userId = data.user.uid;
 
                     createUser(userId, req, (user: any) => {
-                        const verifyLink = `${GenericUtil.getFullReqUrl(req)}/verify/${user.userId}/${user.emailVerificationToken}`;
+                        const verifyLink = `${GenericUtil.getDomainReqUrl(req)}/api/signup/verify/${user.userId}/${user.emailVerificationToken}`;
                         const newUser = usersDBRef.push();
                         newUser.set(user).then(() => {
                             EmailUtil.sendEmail("Welcome to Prooven",
@@ -168,8 +168,6 @@ export const authDefs = function() {
     });
 
     app.get('/signup/verify/:userId/:token', (req: any, res: any) => {
-        res.header("Access-Control-Allow-Origin", "*");
-
         const userId: String = req.params.userId;
         const token: String = req.params.token;
         UserUtil.getUserId(userId, (user: any) => {
