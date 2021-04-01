@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@types/jquery": "^3.3.29",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "filepond": "^4.4.12",
     "filepond-plugin-file-validate-size": "^2.2.0",
     "filepond-plugin-file-validate-type": "^1.2.4",
