@@ -41,7 +41,7 @@
     "path": "0.12.7",
     "randomstring": "1.1.5",
     "sequelize": "5.16.0",
-    "xlsx": "0.14.4"
+    "xlsx": "0.17.0"
   },
   "devDependencies": {
     "tslint": "^5.12.0",
